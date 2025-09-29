@@ -1,0 +1,344 @@
+---
+title: "&emsp;&emsp;&emsp;&emsp;Neural Dynamic N-mixture Model"
+subtitle: "A deep learning framework for inferring demographic rates from count data"
+author: "**Speaker:**<br>François Leroy (he/him)<br>**Supervised by:**<br>Marta Jarzyna<br><br><br><br>"
+date: "`r Sys.Date()`"
+institute: "<br><br><br><br>The Ohio State University"
+output:
+  xaringan::moon_reader:
+    seal: true ## for the title slide
+    self_contained: true  ## otherwise you need the entire folder to see the slides correctly
+    yolo: false
+    css: ["css_template/middlebury.css", "css_template/tamu-fonts.css"] ## Note that if you don't specify the .css after the file name here, xaringan will import and renew the template at each run in ./libs/remark-css/
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      titleSlideClass: [top, inverse]
+bibliograhy: references.bib
+---
+
+```{r, echo=F}
+knitr::opts_chunk$set(message = F, 
+                      warning = F,
+                      echo = F)
+```
+
+
+# Beyond abundance change
+
+<div class="center" style="margin:0;">
+  <h2 style="margin:0 0 0em; line-height:1.05; display:inline-block;">
+    Demographic rates
+  </h2>
+</div>
+
+.pull-left[
+
+* Changes in abundance are valuable, but demographic mechanisms offer deeper ecological insights
+
+* Species' extinctions event are the result of increasing difference between birth and loss
+
+* Demographic rates can be early warnings of species extinction 
+
+* Monitoring survival and recruitment can help anticipate species' extinction and understand better the current biodiversity crisis 
+
+]
+
+.pull-right[
+
+<br><br>
+
+```{r}
+knitr::include_graphics("images/slide1.png")
+```
+
+
+]
+
+
+---
+
+# Beyond abundance change
+
+<div class="center" style="margin:0;">
+  <h2 style="margin:0 0 0em; line-height:1.05; display:inline-block;">
+    Problem
+  </h2>
+</div>
+
+.pull-left[
+
+
+* Data for demographic rates models are individual based (i.e. *individual encounter history data*)
+
+* They are costly in resources and time
+
+* Individual identification is not equal for all taxa
+
+* Can be invasive/traumatic
+
+* Limited spatial and temporal extent
+
+]
+
+.pull-right[
+
+<div style="margin-right:-3.5em">
+
+```{r, out.width="100%"}
+knitr::include_graphics("images/slide2.png")
+```
+
+]
+
+---
+
+# Beyond abundance change
+
+<div class="center" style="margin:0;">
+  <h2 style="margin:0 0 0em; line-height:1.05; display:inline-block;">
+    Using abundance to infer demographic rates
+  </h2>
+</div>
+
+.pull-left[
+
+* However, abundance data are available at large spatial and temporal scale
+
+* The idea of inferring birth/immigration ($\mu$) and death/emigration ($\lambda$) from experimental data is not new
+
+* While overall change in abundance gives information about $\lambda-\mu$, the volatility of the time-series provide information about $\lambda+\mu$ making $\lambda$ and $\mu$ identifiable
+
+]
+
+.pull-right[
+
+<br>
+
+<img src="images/slide3.png" class="bigimg" />
+
+
+]
+
+.footnote[Wilkinson, 2011]
+
+---
+
+# Dynamic N-mixture model
+
+<div class="center" style="margin:0;">
+  <h2 style="margin:0 0 0em; line-height:1.05; display:inline-block;">
+    Hierarchical Model
+  </h2>
+</div>
+
+**Observation process**
+
+.pull-left[
+
+$$y_{i,j,t} \sim Binomial(N_{i,t}, p)$$
+
+]
+
+--
+
+.pull-right[
+
+$y =$ observed abundance<br>
+$p =$ detection probability
+
+]
+
+**State process**
+
+.pull-left[
+
+$$N_{i,1} \sim Poisson(\lambda)$$
+<br>
+
+$$S_{i,t+1} \sim Binomial(N_{i,t}, \phi_{i,t})\\
+R_{i,t+1} \sim Poisson(\gamma_{i,t})\\
+N_{i,t+1} = S_{i,t+1} + R_{i,t+1}$$
+
+]
+
+.pull-right[
+
+$\lambda =$ abundance at $t = 1$
+
+<br>
+
+$\phi =$ survival probability<br>
+$\gamma =$ number of recruits
+]
+
+.footnote[Dail & Madsen, 2011]
+
+---
+
+# Neural hierarchical model
+
+.pull-left[
+
+**Limitations of hierarchical framework**
+
+* Linear or simple polynomial effects of covariates, even though true ecological responses are often unknown *a priori*
+
+* MCMC algorithm scales poorly because inherently sequential, little possibility of parallelization 
+
+* Sensitive to priors and initial values
+
+]
+
+.pull-right[
+
+**Limitations of Neural Networks**
+
+* Usually lack inferential power, making it less relevant for ecological insights
+
+* Doesn't distinguish between ecological process and imperfect detection
+
+]
+
+--
+
+.center[
+
+```{r, out.width="70%"}
+knitr::include_graphics("images/joseph.png")
+```
+
+]
+
+---
+
+# Neural hierarchical model
+
+.center[
+
+```{r, out.width="90%"}
+knitr::include_graphics("images/joseph.png")
+```
+
+]
+
+<br>
+
+* Combines flexibility and scalability of neural networks with the inferential power of hierarchical models
+
+* Output activation function according to the parameter to infer (sigmoid for probability, exponential for counts)
+
+* Loss function: tailored from the model specific negative log-likelihood
+
+* Combines decades of development in hierarchical modelling for ecological data with the flexibility and predictive power of Neural Networks
+
+---
+
+# Neural Dynamic N-mixture model
+
+.footnote[\* Krishnan et al. 2017]
+
+<div class="center" style="margin:0;">
+  <h2 style="margin:0 0 0em; line-height:1.05; display:inline-block;">
+    Deep Markov Model*
+  </h2>
+</div>
+
+.pull-left-narrow[
+
+<br>
+
+**State process**
+
+$$\begin{align*}
+& N_{i,1} \sim Poisson(\lambda)
+\end{align*}$$
+
+<br>
+
+$$\begin{align*}
+& R_{i,t+1} \sim Poisson(\gamma_{i,t})\\
+& S_{i,t+1} \sim Binomial(N_{i,t}, \phi_{i,t})\\
+& N_{i,t+1} = S_{i,t+1} + R_{i,t+1}
+\end{align*}$$
+
+
+
+**Observation process**
+
+$$\begin{align*}
+& y_{i,j,t} \sim Binomial(N_{i,t}, p)
+\end{align*}$$
+
+
+]
+
+
+.pull-right-wide[
+
+<div style="margin-right:-3.5em">
+
+<br>
+
+```{r}
+knitr::include_graphics(
+  "images/NN_DNM.png"
+)
+```
+
+]
+
+---
+
+# Example with the N-mixture model
+
+* Show the likelihood
+
+* You have to marginalize over n_max
+
+---
+
+# The transition matrix
+
+* As it it a Hidden Markov Model, the likelihood involves a transition between time $t$ and $t+1$
+
+* This is the bottleneck
+
+---
+
+# Loss function of the DNMM
+
+---
+
+# Optimization 
+
+* Hidden Markov Model $\Rightarrow$ Deep Markov Model (Krishnan et al., 2017)
+
+* Trade-off between memory use and speed
+
+* I choose fast implementation with heavy memory use
+
+---
+
+# Simulated data
+
+
+---
+
+# Results of the simulation
+
+---
+
+# Fitting on real data
+
+---
+
+# Next step
+
+* So far it is a simple MLP
+
+* Promising to use a CNN
+
+
