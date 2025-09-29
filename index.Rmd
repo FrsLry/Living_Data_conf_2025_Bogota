@@ -142,14 +142,14 @@ $$y_{i,j,t} \sim Binomial(N_{i,t}, p)$$
 
 ]
 
---
-
 .pull-right[
 
 $y =$ observed abundance<br>
 $p =$ detection probability
 
 ]
+
+--
 
 **State process**
 
@@ -292,11 +292,144 @@ knitr::include_graphics(
 
 ---
 
+# Neural Dynamic N-mixture model
+
+.footnote[\* Krishnan et al. 2017]
+
+<div class="center" style="margin:0;">
+  <h2 style="margin:0 0 0em; line-height:1.05; display:inline-block;">
+    Deep Markov Model*
+  </h2>
+</div>
+
+.pull-left-narrow[
+
+<br>
+
+**State process**
+
+$$\begin{align*}
+& N_{i,1} \sim Poisson(\lambda)
+\end{align*}$$
+
+<br>
+
+$$\begin{align*}
+& R_{i,t+1} \sim Poisson(\gamma_{i,t})\\
+& S_{i,t+1} \sim Binomial(N_{i,t}, \phi_{i,t})\\
+& N_{i,t+1} = S_{i,t+1} + R_{i,t+1}
+\end{align*}$$
+
+
+
+**Observation process**
+
+$$\begin{align*}
+& y_{i,j,t} \sim Binomial(N_{i,t}, p)
+\end{align*}$$
+
+
+]
+
+
+.pull-right-wide[
+
+<div style="margin-right:-3.5em">
+
+<br>
+
+```{r}
+knitr::include_graphics("images/NN_DNM1.png")
+```
+
+]
+
+---
+
 # Example with the N-mixture model
 
-* Show the likelihood
+**Observation process**
 
-* You have to marginalize over n_max
+$$\begin{align*}
+& y_{i,j,t} \sim Binomial(N_{i,t}, p)
+\end{align*}$$
+
+**State process**
+
+$$\begin{align*}
+& N_{i} \sim Poisson(\lambda)
+\end{align*}$$
+
+--
+
+<br>
+
+**Integrated likelihood:**
+
+<br>
+
+$$\begin{align*} &\hfill L\!\left(p,\lambda \mid y_{it} \right) = \prod_{i=1}^{R} \left( \sum_{N_i = 0}^{\infty} \left( \prod_{t=1}^{T} Bin \!\left(y_{it}; N_i, p\right) \right) Pois \!\left(N_i;\lambda\right) \right) \end{align*}$$
+
+---
+
+# Example with the N-mixture model
+
+**Observation process**
+
+$$\begin{align*}
+& y_{i,j,t} \sim Binomial(N_{i,t}, p)
+\end{align*}$$
+
+**State process**
+
+$$\begin{align*}
+& N_{i} \sim Poisson(\lambda)
+\end{align*}$$
+
+<br>
+
+**Integrated likelihood:**
+
+<br>
+
+$$\begin{align*} &\hfill L\!\left(p,\lambda \mid y_{it} \right) = \prod_{i=1}^{R} \left( \sum_{N_i = 0}^{K} \left( \prod_{t=1}^{T} Bin \!\left(y_{it}; N_i, p\right) \right) Pois \!\left(N_i;\lambda\right) \right) \end{align*}$$
+
+<br>
+
+* Marginalize over $K >> y_{it}$
+
+---
+
+# Dynamic N-mixture model
+
+**State process**
+
+$$\begin{align*}
+& N_{i,1} \sim Poisson(\lambda)\\
+& R_{i,t+1} \sim Poisson(\gamma_{i,t})\\
+& S_{i,t+1} \sim Binomial(N_{i,t}, \phi_{i,t})\\
+& N_{i,t+1} = S_{i,t+1} + R_{i,t+1}
+\end{align*}$$
+
+**Observation process**
+
+$$\begin{align*}
+& y_{i,j,t} \sim Binomial(N_{i,t}, p)
+\end{align*}$$
+
+**Integrated likelihood**
+
+$$\mathcal{L}(p, \lambda, \gamma, \phi \mid y_{it}) =
+\prod_{i=1}^{R} \left[
+  \sum_{N_{i1} = 0}^{\infty} \cdots \sum_{N_{iT} = 0}^{\infty}
+  \left\{
+  \left(
+    \prod_{t=1}^{T} Bin(y_{it}; N_{it}, p)
+  \right)\\
+  \times Pois(N_{i1}; \lambda)
+  \cdot \prod_{t=2}^{T} P_{N_{it-1}, N_{it}}
+  \right\}
+\right]$$
 
 ---
 
@@ -305,10 +438,6 @@ knitr::include_graphics(
 * As it it a Hidden Markov Model, the likelihood involves a transition between time $t$ and $t+1$
 
 * This is the bottleneck
-
----
-
-# Loss function of the DNMM
 
 ---
 
@@ -341,4 +470,6 @@ knitr::include_graphics(
 
 * Promising to use a CNN
 
+---
 
+# Limitations
