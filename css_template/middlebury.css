@@ -144,9 +144,9 @@ tr:nth-child(even) { background: #eee }
 
 /* Add image and change bg color */
 .title-slide {
-  background-image: url(../images/NSF.png), url(../images/cover.png), url(../images/ohio_su_logo.jpg), url(../images/ABC.png);
-  background-position: 25px 98%, 100% 85%, 150px 98%, 50px 65%;
-  background-size: 125px, 67%, 125px, 25%;
+  background-image: url(../images/NSF.png), url(../images/cover.png), url(../images/ohio_su_logo.jpg), url(../images/ABC.png), url(../images/JarzynaLab-Logo_Horizontal-Color.png);
+  background-position: 25px 98%, 100% 85%, 150px 98%, 50px 65%, 300px 98%;
+  background-size: 125px, 67%, 125px, 25%, 25%;
   background-color: #fff;
   padding-left: 100px;  /* delete this for 4:3 aspect ratio */
 }

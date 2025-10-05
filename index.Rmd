@@ -71,7 +71,7 @@ knitr::include_graphics("images/slide1.png")
 .pull-left[
 
 
-* Data for demographic rates models are individual based (i.e. *individual encounter history data*)
+* Data for demographic rates models are per individual (i.e. *individual encounter history data*)
 
 * They are costly in resources and time
 
@@ -130,7 +130,7 @@ knitr::include_graphics("images/slide2.png")
 
 <div class="center" style="margin:0;">
   <h2 style="margin:0 0 0em; line-height:1.05; display:inline-block;">
-    Hierarchical Model
+    Hidden Markov Model
   </h2>
 </div>
 
@@ -145,9 +145,12 @@ $$y_{i,j,t} \sim Binomial(N_{i,t}, p)$$
 .pull-right[
 
 $y =$ observed abundance<br>
+$N_{it} =$ latent "true" abundance<br>
 $p =$ detection probability
 
 ]
+
+.footnote[Dail & Madsen, 2011]
 
 --
 
@@ -178,7 +181,7 @@ $\gamma =$ number of recruits
 
 ---
 
-# Neural hierarchical model
+# Limitations of Existing Frameworks
 
 .pull-left[
 
@@ -228,21 +231,21 @@ knitr::include_graphics("images/joseph.png")
 
 * Combines flexibility and scalability of neural networks with the inferential power of hierarchical models
 
-* Output activation function according to the parameter to infer (sigmoid for probability, exponential for counts)
-
-* Loss function: tailored from the model specific negative log-likelihood
-
 * Combines decades of development in hierarchical modelling for ecological data with the flexibility and predictive power of Neural Networks
+
+* Output activation function according to the parameter to infer
+
+* Loss function: tailored from the model's specific Likelihood (i.e. negative log-likelihood)
 
 ---
 
 # Neural Dynamic N-mixture model
 
-.footnote[\* Krishnan et al. 2017]
+<!-- .footnote[\* Krishnan et al. 2017] -->
 
 <div class="center" style="margin:0;">
   <h2 style="margin:0 0 0em; line-height:1.05; display:inline-block;">
-    Deep Markov Model*
+    Hidden Markov Model
   </h2>
 </div>
 
@@ -294,11 +297,9 @@ knitr::include_graphics(
 
 # Neural Dynamic N-mixture model
 
-.footnote[\* Krishnan et al. 2017]
-
 <div class="center" style="margin:0;">
   <h2 style="margin:0 0 0em; line-height:1.05; display:inline-block;">
-    Deep Markov Model*
+    Hidden Markov Model
   </h2>
 </div>
 
@@ -417,6 +418,8 @@ $$\begin{align*}
 & y_{i,j,t} \sim Binomial(N_{i,t}, p)
 \end{align*}$$
 
+--
+
 **Integrated likelihood**
 
 $$\mathcal{L}(p, \lambda, \gamma, \phi \mid y_{it}) =
@@ -427,49 +430,185 @@ $$\mathcal{L}(p, \lambda, \gamma, \phi \mid y_{it}) =
     \prod_{t=1}^{T} Bin(y_{it}; N_{it}, p)
   \right)\\
   \times Pois(N_{i1}; \lambda)
-  \cdot \prod_{t=2}^{T} P_{N_{it-1}, N_{it}}
+  \cdot \prod_{t=2}^{T} P_{N_{it}, N_{it+1}}
   \right\}
 \right]$$
 
 ---
 
-# The transition matrix
+# Dynamic N-mixture model
 
-* As it it a Hidden Markov Model, the likelihood involves a transition between time $t$ and $t+1$
+**State process**
 
-* This is the bottleneck
+$$\begin{align*}
+& N_{i,1} \sim Poisson(\lambda)\\
+& R_{i,t+1} \sim Poisson(\gamma_{i,t})\\
+& S_{i,t+1} \sim Binomial(N_{i,t}, \phi_{i,t})\\
+& N_{i,t+1} = S_{i,t+1} + R_{i,t+1}
+\end{align*}$$
+
+**Observation process**
+
+$$\begin{align*}
+& y_{i,j,t} \sim Binomial(N_{i,t}, p)
+\end{align*}$$
+
+**Integrated likelihood**
+
+$$\mathcal{L}(p, \lambda, \gamma, \phi \mid y_{it}) =
+\prod_{i=1}^{R} \left[
+  \sum_{N_{i1} = 0}^{K} \cdots \sum_{N_{iT} = 0}^{K}
+  \left\{
+  \left(
+    \prod_{t=1}^{T} Bin(y_{it}; N_{it}, p)
+  \right)\\
+  \times Pois(N_{i1}; \lambda)
+  \cdot \prod_{t=2}^{T} P_{N_{it}, N_{it+1}}
+  \right\}
+\right]$$
 
 ---
 
-# Optimization 
+# Transition matrix
 
-* Hidden Markov Model $\Rightarrow$ Deep Markov Model (Krishnan et al., 2017)
+* Key part of Hidden Markov Models
 
-* Trade-off between memory use and speed
+* Involves the transition between abundance at time $t$ and $t+1$ and the demographic parameters
 
-* I choose fast implementation with heavy memory use
+* Each element of the transition matrix $P$ represents the transition probability from state $N_{it} = j$ to state $N_{it+1} = k$ with the discrete convolution:
+
+$$P_{jk} = \sum_{c=0}^{\min(j, k)} Bin(c; j, \phi) \cdot Pois(k - c; \gamma)$$
+
+--
+
+
+$$\begin{array}{c@{\qquad}c}
+N_{i,t} &
+\begin{array}{c}
+\scriptstyle N_{i,t+1} \\[-0.3ex]
+\begin{bmatrix}
+P_{K0} & P_{K1} & P_{K2} & \cdots & P_{KK} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+P_{20} & P_{21} & P_{22} & \cdots & P_{2K} \\
+P_{10} & P_{11} & P_{12} & \cdots & P_{1K} \\
+P_{00} & P_{01} & P_{02} & \cdots & P_{0K}
+\end{bmatrix}
+\end{array}
+\end{array}$$
 
 ---
 
-# Simulated data
+# Transition matrix - Optimization 
+
+* One transition matrix **per time step and per time-series** $\Rightarrow$ Bottleneck
+
+$$P_{jk} = \sum_{c=0}^{\min(j, k)} Bin(c; j, \phi) \cdot Pois(k - c; \gamma)$$
+$$\begin{array}{c@{\qquad}c}
+N_{i,t} &
+\begin{array}{c}
+\scriptstyle N_{i,t+1} \\[-0.3ex]
+\begin{bmatrix}
+P_{K0} & P_{K1} & P_{K2} & \cdots & P_{KK} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+P_{20} & P_{21} & P_{22} & \cdots & P_{2K} \\
+P_{10} & P_{11} & P_{12} & \cdots & P_{1K} \\
+P_{00} & P_{01} & P_{02} & \cdots & P_{0K}
+\end{bmatrix}
+\end{array}
+\end{array}$$
+
+* **Fast, heavy memory implementation:** vectorisation of $P$ over every time steps and batch size
+
+* **Time gain:** e.g. from 88 minutes in Bayesian framework (JAGS) to ca. 15 minutes with this implementation (CUDA, 8GB VRAM)
+
+---
+
+# Data simulation
+
+* Simulating quadratic relationship between a covariate $x$ and the parameters $p$, $\lambda$, $\gamma$, and $\phi$
+
+* 300 sites, 15 years long time series, 5 repeated counts
+
+.center[
+
+```{r, out.width="70%"}
+knitr::include_graphics("images/simulated_data.png")
+```
+
+]
 
 
 ---
 
 # Results of the simulation
 
----
+* Simple MLP: 1 hidden layer, 64 hidden units, 300 epochs
 
-# Fitting on real data
+<!-- * Run time: XXX minutes (CUDA, 8GB VRAM, batch size = 8) -->
+
+.center[
+
+```{r, out.width="90%"}
+knitr::include_graphics("images/epochs_params_1.png")
+```
+
+]
 
 ---
 
 # Next step
 
-* So far it is a simple MLP
+* So far the architechture of the network is a Multilayer Perceptron
 
-* Promising to use a CNN
+* Next step is to use a Convolutional Neural Network with this Loss Function
+
+* Potential to use satellite images as input
+
+* This will tell us which features of the landscape are enhancing survival and recruitment 
+
+* Could give real insights on landscape management and provide guidelines for conservation strategies
+
+* Use this framework on large spatio-temporal data
 
 ---
 
 # Limitations
+
+* In real life, parametric assumptions are rarely met: the field sampling won't often sample from Poisson and Binomial distribution
+
+* Especially true for Recruitment ($\gamma$) and Survival ($\phi$), where the input data doesn't contain clear information (unlike abundance $N$)
+
+* Tends to overestimate survival rate over recruitment
+
+* Marginalization over $K$: if too small, biased likelihood, if too big, slow computation/memory heavy 
+
+---
+
+# Summary
+
+* **Neural Dynamic N-mixture model**
+  * Merges hierarchical ecological modeling with deep learning flexibility
+  * Enables fast, parallelizable inference on GPUs
+
+* **Interpretability retained**
+  * Demographic parameters (survival, recruitment, detection, abundance) are explicitly inferred from count data
+
+* **Performance advantage**
+  * Scales better than classical Bayesian MCMC approaches
+  * Recovers demographic parameters reliably
+
+* **Future potential**
+  * Extends demographic rate estimation from count data to applications with computer vision
+  
+---
+
+# &emsp;&emsp;&emsp;&emsp;Acknowledgements
+
+.center[
+
+```{r, out.width="92%"}
+knitr::include_graphics("images/acknowledgment.png")
+```
+
+]
+
