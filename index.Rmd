@@ -38,11 +38,11 @@ knitr::opts_chunk$set(message = F,
 
 * Changes in abundance are valuable, but demographic mechanisms offer deeper ecological insights
 
-* Species' extinctions event are the result of increasing difference between birth and loss
+* Species' extinctions event are the result of increasing difference between recruitment and loss
 
-* Demographic rates can be early warnings of species extinction 
+* Changes in demographic rates can be early warnings of species extinction 
 
-* Monitoring survival and recruitment can help anticipate species' extinction and understand better the current biodiversity crisis 
+* Monitoring survival and recruitment can help tailoring efficient conservation policies
 
 ]
 
@@ -233,9 +233,9 @@ knitr::include_graphics("images/joseph.png")
 
 * Combines decades of development in hierarchical modelling for ecological data with the flexibility and predictive power of Neural Networks
 
-* Output activation function according to the parameter to infer
-
 * Loss function: tailored from the model's specific Likelihood (i.e. negative log-likelihood)
+
+* Output activation function according to the parameter to infer
 
 ---
 
@@ -498,6 +498,34 @@ P_{00} & P_{01} & P_{02} & \cdots & P_{0K}
 
 ---
 
+# Transition matrix
+
+.center[
+
+```{r, out.width="80%"}
+knitr::include_graphics("images/transmat_extreme.png")
+```
+
+]
+
+---
+
+# Transition matrix
+
+<br><br>
+
+.center[
+
+```{r}
+knitr::include_graphics("images/transmat_middle.png")
+```
+
+
+]
+
+
+---
+
 # Transition matrix - Optimization 
 
 * One transition matrix **per time step and per time-series** $\Rightarrow$ Bottleneck
@@ -519,7 +547,7 @@ P_{00} & P_{01} & P_{02} & \cdots & P_{0K}
 
 * **Fast, heavy memory implementation:** vectorisation of $P$ over every time steps and batch size
 
-* **Time gain:** e.g. from 88 minutes in Bayesian framework (JAGS) to ca. 15 minutes with this implementation (CUDA, 8GB VRAM)
+* **Time gain:** e.g. from 88 minutes in Bayesian framework (JAGS) to ca. 15 minutes with this implementation (CUDA, 8GB VRAM, 300 epochs)
 
 ---
 
