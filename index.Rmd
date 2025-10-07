@@ -547,7 +547,7 @@ P_{00} & P_{01} & P_{02} & \cdots & P_{0K}
 
 * **Fast, heavy memory implementation:** vectorisation of $P$ over every time steps and batch size
 
-* **Time gain:** e.g. from 88 minutes in Bayesian framework (JAGS) to ca. 15 minutes with this implementation (CUDA, 8GB VRAM, 300 epochs)
+* **Time gain:** e.g. from 88 minutes in Bayesian framework (JAGS) to ca. 15 minutes with this implementation (8GB VRAM, 300 epochs)
 
 ---
 
